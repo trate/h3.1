@@ -2,7 +2,9 @@ package transaction
 
 import (
 	"encoding/csv"
+	"encoding/xml"
 	"io"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"sync"
@@ -10,11 +12,11 @@ import (
 )
 
 type Transaction struct {
-	Id string
-	From string
-	To string
-	Amount int64
-	Created int64
+	Id string `xml:"id"`
+	From string `xml:"from"`
+	To string `xml:"to"`
+	Amount int64 `xml:"amount"`
+	Created int64 `xml:"created"`
 }
 
 type Service struct {
@@ -64,6 +66,22 @@ func (s *Service) ExportCSV(writer io.Writer) error {
 	return w.WriteAll(records)
 }
 
+func (s *Service) ExportXML(writer io.Writer) error {
+	s.mu.Lock()
+	if len(s.Transactions) == 0 {
+		s.mu.Unlock()
+		return nil
+	}
+	 encoded, err := xml.Marshal(s.Transactions)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	s.mu.Unlock()
+	_, err = io.WriteString(writer, string(encoded))
+	return err
+}
+
 func MapRowToTransaction(record []string) *Transaction {
 	if len(record) != 5 {
 		return nil
@@ -106,4 +124,15 @@ func (s *Service) ImportCSV(reader io.Reader) error {
 	}
 	s.mu.Unlock()
 	return nil
+}
+func (s *Service) ImportXML(reader io.Reader) error {
+	d, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	s.mu.Lock()
+	err = xml.Unmarshal(d, &s.Transactions)
+	s.mu.Unlock()
+	return err
 }

@@ -25,7 +25,7 @@ func execute(filename string) (err error) {
 
 	svc := transaction.NewService()
 
-	err = svc.ImportCSV(file)
+	err = svc.ImportXML(file)
 	if err != nil {
 		log.Println(err)
 		return
@@ -35,7 +35,7 @@ func execute(filename string) (err error) {
 }
 
 func main() {
-	if err := execute("export.csv"); err != nil {
+	if err := execute("export.xml"); err != nil {
 		os.Exit(1)
 	}
 }
