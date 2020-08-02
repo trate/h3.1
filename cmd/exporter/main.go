@@ -30,7 +30,7 @@ func execute(filename string) (err error) {
 		return
 	}
 
-	err = svc.ExportCSV(file)
+	err = svc.ExportJSON(file)
 	if err != nil {
 		log.Println(err)
 		return
@@ -39,7 +39,7 @@ func execute(filename string) (err error) {
 }
 
 func main() {
-	if err := execute("export.csv"); err != nil {
+	if err := execute("export.json"); err != nil {
 		os.Exit(1)
 	}
 }

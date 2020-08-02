@@ -2,7 +2,9 @@ package transaction
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"io"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"sync"
@@ -10,11 +12,11 @@ import (
 )
 
 type Transaction struct {
-	Id string
-	From string
-	To string
-	Amount int64
-	Created int64
+	Id string `json:"id"`
+	From string `json:"from"`
+	To string `json:"to"`
+	Amount int64 `json:"amount"`
+	Created int64 `json:"created"`
 }
 
 type Service struct {
@@ -63,6 +65,21 @@ func (s *Service) ExportCSV(writer io.Writer) error {
 	w := csv.NewWriter(writer)
 	return w.WriteAll(records)
 }
+func (s *Service) ExportJSON(writer io.Writer) error {
+	s.mu.Lock()
+	if len(s.Transactions) == 0 {
+		s.mu.Unlock()
+		return nil
+	}
+	encoded, err := json.Marshal(s.Transactions)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	s.mu.Unlock()
+	_, err = io.WriteString(writer, string(encoded))
+	return err
+}
 
 func MapRowToTransaction(record []string) *Transaction {
 	if len(record) != 5 {
@@ -106,4 +123,14 @@ func (s *Service) ImportCSV(reader io.Reader) error {
 	}
 	s.mu.Unlock()
 	return nil
+}
+
+func (s *Service) ImportJSON(reader io.Reader) error {
+	d, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	err = json.Unmarshal(d, &s.Transactions)
+	return err
 }
