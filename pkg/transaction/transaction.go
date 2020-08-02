@@ -131,6 +131,8 @@ func (s *Service) ImportJSON(reader io.Reader) error {
 		log.Println(err)
 		return err
 	}
+	s.mu.Lock()
 	err = json.Unmarshal(d, &s.Transactions)
+	s.mu.Unlock()
 	return err
 }
